@@ -67,14 +67,13 @@ cd remind-reid-tracker
 conda env create -f environment.yml
 conda activate remind
 
-# Optional: enable the RF-DETR video/frame backend
-pip install rfdetr
+# The optional RF-DETR video/frame backend is included in environment.yml.
 ```
 
 Models are loaded automatically at runtime:
 - **DINOv3** — fetched from HuggingFace on first use (configurable via `dino.model_label` in `config/default_config.yaml`)
 - **YOLO** — place segmentation weights under `yolo/` and pass the model file name to `main.py`
-- **RF-DETR** — installed separately with `pip install rfdetr`; select a supported variant with `--detector-backend rfdetr --rfdetr-model medium`, or provide a local checkpoint with `--rfdetr-weights /path/to/checkpoint`.
+- **RF-DETR** — included in `environment.yml`; select a supported variant with `--detector-backend rfdetr --rfdetr-model medium`, or provide a local checkpoint with `--rfdetr-weights /path/to/checkpoint`.
 
 RF-DETR model and checkpoint provenance is your responsibility. Record the exact package version, model variant, checkpoint source, and applicable license for every run. This repository does not redistribute RF-DETR checkpoints.
 
@@ -112,10 +111,9 @@ python main.py my_scene custom-seg.pt \
 
 The second argument is the YOLO model file name, and the file must exist under `yolo/`.
 
-To run the same frame/video path with RF-DETR, install the optional package and omit the legacy YOLO positional model argument:
+To run the same frame/video path with RF-DETR, create the shipped Conda environment and omit the legacy YOLO positional model argument:
 
 ```bash
-pip install rfdetr
 python main.py my_scene \
   --detector-backend rfdetr \
   --rfdetr-model medium \
