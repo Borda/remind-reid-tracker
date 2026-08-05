@@ -165,7 +165,7 @@ These annotation files and datasets are not included in this repository. To run 
 ### Single sequence
 
 ```bash
-python testing/run_tracking_test.py \
+python evaluation/run_tracking_test.py \
   --detector-backend davis \
   --frames-dir /path/to/FRAMES/ \
   --davis-meta-path /path/to/metaCUSTOMVIDEO.json \
@@ -177,7 +177,7 @@ python testing/run_tracking_test.py \
 ### Batch evaluation
 
 ```bash
-python testing/run_tracking_batch.py \
+python evaluation/run_tracking_batch.py \
   --images-root /path/to/scannetpp_small_test/ \
   --masks-root /path/to/scannetpp_small_test/ \
   --mask-variant raw \

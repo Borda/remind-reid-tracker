@@ -611,11 +611,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Run REMIND tracking on a test scene using YOLO or RF-DETR segmentation. "
-            "By default scenes are resolved from testData/videos/<scene>/ or testData/frames/<scene>/."
+            "By default scenes are resolved from evalData/videos/<scene>/ or evalData/frames/<scene>/."
         ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("scene", help="Scene name under testData/videos/ or testData/frames/.")
+    parser.add_argument("scene", help="Scene name under evalData/videos/ or evalData/frames/.")
     parser.add_argument(
         "yolo_model",
         nargs="?",
@@ -628,7 +628,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Instance-segmentation backend. DAVIS remains available only through evaluation scripts.",
     )
     parser.add_argument("--source", type=Path, help="Direct input video, image, or frame directory. Overrides scene lookup but still uses the scene name for outputs.")
-    parser.add_argument("--test-root", type=Path, default=REPO_ROOT / "testData", help="Root containing videos/ and frames/ scene folders.")
+    parser.add_argument("--test-root", type=Path, default=REPO_ROOT / "evalData", help="Root containing videos/ and frames/ scene folders.")
     parser.add_argument(
         "--input-kind",
         choices=["auto", "video", "frames"],
