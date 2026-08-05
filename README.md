@@ -64,11 +64,8 @@ git clone https://github.com/cvar-vision-dl/remind-reid-tracker
 cd remind-reid-tracker
 
 # Create environment (Python 3.10+ recommended)
-conda create -n remind python=3.10 -y
+conda env create -f environment.yml
 conda activate remind
-
-# Install dependencies
-pip install torch torchvision transformers scikit-learn scipy numpy opencv-python tqdm psutil ultralytics
 ```
 
 Models are loaded automatically at runtime:
@@ -189,4 +186,3 @@ Config("config/default_config.yaml", "my_override.yaml")
 Detector backends: `"davis"` (ground-truth masks from DAVIS / ScanNet++) or `"yolo"` (YOLO instance segmentation).
 
 ---
-
