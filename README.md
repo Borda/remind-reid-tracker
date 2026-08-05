@@ -66,17 +66,25 @@ cd remind-reid-tracker
 # Create environment (Python 3.10+ recommended)
 conda env create -f environment.yml
 conda activate remind
+
+# Optional: enable the RF-DETR video/frame backend
+pip install rfdetr
 ```
 
 Models are loaded automatically at runtime:
 - **DINOv3** — fetched from HuggingFace on first use (configurable via `dino.model_label` in `config/default_config.yaml`)
 - **YOLO** — place segmentation weights under `yolo/` and pass the model file name to `main.py`
+- **RF-DETR** — installed separately with `pip install rfdetr`; select a supported variant with `--detector-backend rfdetr --rfdetr-model medium`, or provide a local checkpoint with `--rfdetr-weights /path/to/checkpoint`.
+
+RF-DETR model and checkpoint provenance is your responsibility. Record the exact package version, model variant, checkpoint source, and applicable license for every run. This repository does not redistribute RF-DETR checkpoints.
+
+The standard `rfdetr` package and Roboflow's Apache-designated models are Apache-2.0 licensed. Roboflow's Plus components and RF-DETR-XL / RF-DETR-2XL detection models use PML 1.0 instead. This integration does not install or import `rfdetr_plus`; review the upstream [RF-DETR licensing terms](https://github.com/roboflow/rf-detr#license) before using an XL/2XL checkpoint or any other non-Apache artifact.
 
 ---
 
 ## Running On Your Own Data
 
-This mode is for trying REMIND on your own videos or frame folders. It does not require ground-truth annotations. You only need input images/video and a YOLO segmentation model.
+This mode is for trying REMIND on your own videos or frame folders. It does not require ground-truth annotations. You need input images/video plus either a YOLO segmentation model or the optional RF-DETR backend.
 
 Place your inputs under `testData/videos/` or `testData/frames/`, one folder per scene. Put local YOLO weights under `yolo/`:
 
@@ -103,6 +111,19 @@ python main.py my_scene custom-seg.pt \
 ```
 
 The second argument is the YOLO model file name, and the file must exist under `yolo/`.
+
+To run the same frame/video path with RF-DETR, install the optional package and omit the legacy YOLO positional model argument:
+
+```bash
+pip install rfdetr
+python main.py my_scene \
+  --detector-backend rfdetr \
+  --rfdetr-model medium \
+  --rfdetr-threshold 0.5 \
+  --save-output-video
+```
+
+Use `--rfdetr-weights /path/to/checkpoint` only for a local checkpoint whose provenance and license you have verified. The detector configuration is exposed as `rfdetr.model_variant`, `rfdetr.pretrain_weights`, `rfdetr.threshold`, `rfdetr.classes`, and mask-erosion settings in the shipped YAML configs. The existing `python main.py SCENE YOLO_MODEL` command remains the default YOLO path.
 
 For video input, frame selection is controlled in this order:
 
@@ -183,6 +204,6 @@ The pipeline reads `config/default_config.yaml` by default. Any parameter can be
 Config("config/default_config.yaml", "my_override.yaml")
 ```
 
-Detector backends: `"davis"` (ground-truth masks from DAVIS / ScanNet++) or `"yolo"` (YOLO instance segmentation).
+Evaluation configs also support `"davis"` for ground-truth masks from DAVIS / ScanNet++. The frame/video CLI exposes `"yolo"` (default) and `"rfdetr"`; use the evaluation scripts rather than `main.py` for DAVIS-backed metrics.
 
 ---

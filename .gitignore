@@ -19,3 +19,9 @@ d4sm
 # JetBrain IDE
 .idea/
 .junie/
+
+# AI artifacts
+.claude/agent-memory/
+.claude/state/
+.plans/
+.reports/
