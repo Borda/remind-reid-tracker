@@ -192,3 +192,71 @@ rfdetr:
         "models": {"KEEP": "preserved.pt"},
         "conf_th": 0.91,
     }
+
+
+@pytest.mark.parametrize(
+    ("argv", "error_match"),
+    [
+        pytest.param(
+            ["scene-name", "yolo-seg.pt", "--detector-backend", "rfdetr"],
+            "yolo_model.*only valid",
+            id="positional-model",
+        ),
+        pytest.param(
+            ["scene-name", "--detector-backend", "rfdetr", "--yolo-imgsz", "736"],
+            "--yolo-imgsz.*only valid",
+            id="yolo-image-size",
+        ),
+    ],
+)
+def test_cli_rfdetr_rejects_yolo_only_arguments_before_source_resolution(
+    argv: list[str], error_match: str
+) -> None:
+    """Prevent RF-DETR runs from silently accepting YOLO-only arguments."""
+    from scripts.run_video_tracking import main
+
+    with pytest.raises(SystemExit, match=error_match):
+        main(argv)
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected_width"),
+    [
+        pytest.param(
+            ["scene-name", "--detector-backend", "rfdetr"],
+            960,
+            id="rfdetr-default",
+        ),
+        pytest.param(
+            ["scene-name", "--detector-backend", "rfdetr", "--input-width", "736"],
+            736,
+            id="rfdetr-explicit-input-width",
+        ),
+        pytest.param(["scene-name", "yolo-seg.pt"], 960, id="yolo-default"),
+        pytest.param(
+            ["scene-name", "yolo-seg.pt", "--input-width", "736"],
+            736,
+            id="yolo-explicit-input-width",
+        ),
+        pytest.param(
+            ["scene-name", "yolo-seg.pt", "--yolo-imgsz", "736"],
+            736,
+            id="yolo-legacy-image-size",
+        ),
+    ],
+)
+def test_cli_configure_normalizes_input_width_and_preserves_yolo_alias(
+    tmp_path: Path,
+    argv: list[str],
+    expected_width: int,
+) -> None:
+    """Prevent detector choice from changing resize width or breaking legacy YOLO commands."""
+    from scripts.run_video_tracking import _configure, build_parser
+
+    config_path = tmp_path / "base.yaml"
+    config_path.write_text("system:\n  input_width_size: 1280\n", encoding="utf-8")
+    args = build_parser().parse_args([*argv, "--config", str(config_path)])
+
+    configured = _configure(args, output_dir=tmp_path / "outputs")
+
+    assert configured["system"]["input_width_size"] == expected_width

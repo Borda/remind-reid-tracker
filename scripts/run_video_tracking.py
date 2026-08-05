@@ -22,7 +22,7 @@ from utils.io import list_image_files, parse_frame_id, read_bgr
 from utils.visualization import overlay_header, overlay_mask_bgr
 
 
-IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp"}
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".pgm", ".tif", ".tiff", ".webp"}
 VIDEO_EXTS = {".mp4", ".avi", ".mov", ".mkv", ".webm", ".m4v"}
 
 
@@ -247,8 +247,8 @@ def _configure(args: argparse.Namespace, output_dir: Path) -> dict:
         if args.rfdetr_weights is not None:
             rfdetr_cfg["pretrain_weights"] = str(args.rfdetr_weights)
 
-    if args.detector_backend == "yolo":
-        cfg.setdefault("system", {})["input_width_size"] = int(args.yolo_imgsz)
+    input_width = args.yolo_imgsz if args.yolo_imgsz is not None else args.input_width
+    cfg.setdefault("system", {})["input_width_size"] = int(input_width)
     cfg.setdefault("runtime", {})["device"] = str(args.device)
     cfg.setdefault("timing", {})["enabled"] = bool(args.verbose_timing)
     cfg.setdefault("timing", {})["table"] = False
@@ -661,11 +661,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="FPS of the rendered output video for both videos and frame folders.",
     )
     io_group.add_argument("--display-scale", type=float, default=1.0, help="Scale factor for preview window only.")
+    io_group.add_argument("--input-width",type=int,default=960,help="Frame width passed to the detector and DINO feature extraction for either backend.",)
 
     yolo = parser.add_argument_group("YOLO")
     yolo.add_argument("--yolo-conf", type=float, default=0.25, help="YOLO confidence threshold.")
     yolo.add_argument("--yolo-iou", type=float, default=0.7, help="YOLO NMS IoU threshold.")
-    yolo.add_argument("--yolo-imgsz", type=int, default=960, help="YOLO inference image size.")
+    yolo.add_argument("--yolo-imgsz", type=int, default=None, help="YOLO-only compatibility override for --input-width.", )
     yolo.add_argument("--max-det", type=int, default=100, help="Maximum YOLO detections per frame.")
     yolo.add_argument("--classes", default=None, help="Comma-separated detector class ids or names to keep.")
     yolo.add_argument("--mask-erosion-px", type=int, default=0, help="Pixels for optional detector-mask erosion.")
@@ -696,6 +697,16 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
+    if args.detector_backend == "rfdetr" and args.yolo_model is not None:
+        raise SystemExit(
+            "error: yolo_model positional argument is only valid with --detector-backend yolo; "
+            "remove it for RF-DETR."
+        )
+    if args.detector_backend == "rfdetr" and args.yolo_imgsz is not None:
+        raise SystemExit(
+            "error: --yolo-imgsz is only valid with --detector-backend yolo; "
+            "use --input-width for RF-DETR."
+        )
     if args.source is not None:
         source = args.source.expanduser().resolve()
         scene_name = str(args.scene).strip()

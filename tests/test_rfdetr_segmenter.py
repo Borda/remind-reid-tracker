@@ -240,6 +240,22 @@ def test_segment_rejects_misaligned_result_arrays(fake_rfdetr_module: type[FakeR
         )
 
 
+def test_segment_rejects_class_filter_without_a_loaded_class(
+    fake_rfdetr_module: type[FakeRFDETRModel],
+) -> None:
+    """Prevent an invalid RF-DETR filter from silently discarding every detection."""
+    fake_rfdetr_module.detections = FakeDetections(
+        xyxy=np.array([[0, 0, 2, 2]], dtype=np.float32),
+        mask=np.array([[[1, 1], [1, 1]]], dtype=np.uint8),
+        class_id=np.array([1]),
+        confidence=np.array([0.9]),
+    )
+    segmenter = _loaded_segmenter(_segmenter_config(classes=["not-in-vocabulary"]))
+
+    with pytest.raises(ValueError, match="matched no loaded RF-DETR classes"):
+        segmenter.segment(np.zeros((2, 2, 3), dtype=np.uint8), frame_id=0, timestamp=0.0)
+
+
 def test_load_model_reports_missing_optional_dependency(monkeypatch: pytest.MonkeyPatch) -> None:
     """Prevent selecting RF-DETR from breaking startup with an opaque import traceback."""
     from detection import rfdetr_segmenter

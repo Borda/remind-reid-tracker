@@ -108,6 +108,16 @@ class RFDETRSegmenter:
                     resolved.add(class_id)
                 continue
             raise ValueError("rfdetr.classes must contain class IDs or class names.")
+        if classes and not resolved:
+            requested = ", ".join(repr(class_spec) for class_spec in classes)
+            available = ", ".join(
+                f"{class_id}: {name!r}"
+                for class_id, name in self.class_id_to_name.items()
+            )
+            raise ValueError(
+                "rfdetr.classes matched no loaded RF-DETR classes. "
+                f"Requested: {requested}. Available: {available or 'none'}"
+            )
         return resolved
 
     def _erode_mask(self, mask: np.ndarray) -> np.ndarray:
