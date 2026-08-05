@@ -15,3 +15,7 @@ PERF_OPTIMIZATIONS.md
 d4sm
 
 *.pt
+
+# JetBrain IDE
+.idea/
+.junie/
