@@ -167,7 +167,7 @@ Results are saved under `outputs/video_runs/`. Use `--save-output-video` to save
 
 ## Evaluation With Ground Truth
 
-The scripts under `testing/` are intended for quantitative evaluation and internal experiment reproduction. They require ground-truth annotations, such as DAVIS-style instance masks and metadata, or prepared ScanNet++-style folders/tars depending on the script.
+The scripts under `evaluation/` are intended for quantitative evaluation and internal experiment reproduction. They require ground-truth annotations, such as DAVIS-style instance masks and metadata, or prepared ScanNet++-style folders/tars depending on the script.
 
 These annotation files and datasets are not included in this repository. To run the evaluation scripts, you must provide your own data in the expected layout, including:
 
@@ -203,6 +203,23 @@ python evaluation/run_tracking_batch.py \
 ```
 
 Outputs include `per_case.csv`, `per_object.csv`, `per_scene.csv`, `summary_global.csv`, and internal module telemetry — ready for offline analysis or direct inclusion in research tables.
+
+### ScanNet++ tar evaluation with RF-DETR
+
+Use the tar runner when frames and DAVIS ground truth are archived separately. RF-DETR predicts from the data archive while the evaluator independently reads metadata and masks from the annotations archive:
+
+```bash
+python evaluation/run_tracking_batch_tar.py \
+  --dataset-root /path/to/scannetpp_data \
+  --scene-id SCENE_ID \
+  --detector-backend rfdetr \
+  --rfdetr-model nano \
+  --rfdetr-threshold 0.5 \
+  --max-frames 1 \
+  --output-dir /path/to/outputs/
+```
+
+The default layout accepts either directories or per-scene archives: `data/<scene>.tar` with images under `dslr/resized_images/`, plus `annotations/<scene>.tar` with `meta_benchmark_instance.json` and masks under `annotations/benchmark_instance/`. Use `--rfdetr-weights /path/to/checkpoint` only after checking its provenance and license. RF-DETR metrics compare predictions against the independent DAVIS ground truth; they do not use ground-truth masks as predictions.
 
 Use these evaluation scripts when you want metrics against GT. Use `main.py` when you only want to run REMIND on a video or frame sequence and visually inspect the tracking output.
 
